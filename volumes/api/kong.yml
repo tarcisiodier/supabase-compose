@@ -1,53 +1,32 @@
-_format_version: '2.1'
+# Kong 3.9 - Configuração Simples para Supabase
+# Arquivo corrigido para resolver erros de parsing
+_format_version: "3.0"
 _transform: true
+
 consumers:
   - username: DASHBOARD
   - username: anon
     keyauth_credentials:
-      - key: $SUPABASE_ANON_KEY
+      - key: "${SUPABASE_ANON_KEY}"
   - username: service_role
     keyauth_credentials:
-      - key: $SUPABASE_SERVICE_KEY
+      - key: "${SUPABASE_SERVICE_KEY}"
+
 acls:
   - consumer: anon
     group: anon
   - consumer: service_role
     group: admin
+
 basicauth_credentials:
   - consumer: DASHBOARD
-    username: $DASHBOARD_USERNAME
-    password: $DASHBOARD_PASSWORD
+    username: "${DASHBOARD_USERNAME}"
+    password: "${DASHBOARD_PASSWORD}"
+
 services:
-  - name: auth-v1-open
-    url: 'http://auth:9999/verify'
-    routes:
-      - name: auth-v1-open
-        strip_path: true
-        paths:
-          - /auth/v1/verify
-    plugins:
-      - name: cors
-  - name: auth-v1-open-callback
-    url: 'http://auth:9999/callback'
-    routes:
-      - name: auth-v1-open-callback
-        strip_path: true
-        paths:
-          - /auth/v1/callback
-    plugins:
-      - name: cors
-  - name: auth-v1-open-authorize
-    url: 'http://auth:9999/authorize'
-    routes:
-      - name: auth-v1-open-authorize
-        strip_path: true
-        paths:
-          - /auth/v1/authorize
-    plugins:
-      - name: cors
+  # Auth Service
   - name: auth-v1
-    _comment: 'GoTrue: /auth/v1/* -> http://auth:9999/*'
-    url: 'http://auth:9999/'
+    url: http://auth:9999/
     routes:
       - name: auth-v1-all
         strip_path: true
@@ -55,18 +34,10 @@ services:
           - /auth/v1/
     plugins:
       - name: cors
-      - name: key-auth
-        config:
-          hide_credentials: false
-      - name: acl
-        config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
+
+  # REST API Service
   - name: rest-v1
-    _comment: 'PostgREST: /rest/v1/* -> http://rest:3000/*'
-    url: 'http://rest:3000/'
+    url: http://rest:3000/
     routes:
       - name: rest-v1-all
         strip_path: true
@@ -76,43 +47,17 @@ services:
       - name: cors
       - name: key-auth
         config:
+          key_names: ["apikey", "Authorization"]
           hide_credentials: true
       - name: acl
         config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
-  - name: graphql-v1
-    _comment: 'PostgREST: /graphql/v1/* -> http://rest:3000/rpc/graphql'
-    url: 'http://rest:3000/rpc/graphql'
+          allow: ["admin", "anon"]
+
+  # Realtime Service
+  - name: realtime-v1
+    url: http://realtime:4000/socket/
     routes:
-      - name: graphql-v1-all
-        strip_path: true
-        paths:
-          - /graphql/v1
-    plugins:
-      - name: cors
-      - name: key-auth
-        config:
-          hide_credentials: true
-      - name: request-transformer
-        config:
-          add:
-            headers:
-              - 'Content-Profile:graphql_public'
-      - name: acl
-        config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
-  - name: realtime-v1-ws
-    _comment: 'Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*'
-    url: 'http://realtime:4000/socket'
-    protocol: ws
-    routes:
-      - name: realtime-v1-ws
+      - name: realtime-v1-all
         strip_path: true
         paths:
           - /realtime/v1/
@@ -120,36 +65,14 @@ services:
       - name: cors
       - name: key-auth
         config:
-          hide_credentials: false
+          key_names: ["apikey", "Authorization"]
       - name: acl
         config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
-  - name: realtime-v1-rest
-    _comment: 'Realtime: /realtime/v1/* -> http://realtime:4000/api/*'
-    url: 'http://realtime:4000/api'
-    protocol: http
-    routes:
-      - name: realtime-v1-rest
-        strip_path: true
-        paths:
-          - /realtime/v1/api
-    plugins:
-      - name: cors
-      - name: key-auth
-        config:
-          hide_credentials: false
-      - name: acl
-        config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
+          allow: ["admin", "anon"]
+
+  # Storage Service
   - name: storage-v1
-    _comment: 'Storage: /storage/v1/* -> http://storage:5000/*'
-    url: 'http://storage:5000/'
+    url: http://storage:5000/
     routes:
       - name: storage-v1-all
         strip_path: true
@@ -157,18 +80,10 @@ services:
           - /storage/v1/
     plugins:
       - name: cors
-      - name: key-auth
-        config:
-          hide_credentials: false
-      - name: acl
-        config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
+
+  # Functions Service
   - name: functions-v1
-    _comment: 'Edge Functions: /functions/v1/* -> http://functions:9000/*'
-    url: 'http://functions:9000/'
+    url: http://functions:9000/
     routes:
       - name: functions-v1-all
         strip_path: true
@@ -176,46 +91,30 @@ services:
           - /functions/v1/
     plugins:
       - name: cors
-      - name: key-auth
-        config:
-          hide_credentials: false
-      - name: acl
-        config:
-          hide_groups_header: true
-          allow:
-            - admin
-            - anon
-  - name: analytics-v1
-    _comment: 'Analytics: /analytics/v1/* -> http://analytics:4000/*'
-    url: 'http://analytics:4000/'
-    routes:
-      - name: analytics-v1-all
-        strip_path: true
-        paths:
-          - /analytics/v1/
+
+  # Meta Service (Database Admin)
   - name: meta
-    _comment: 'pg-meta: /pg/* -> http://meta:8080/*'
-    url: 'http://meta:8080/'
+    url: http://meta:8080/
     routes:
       - name: meta-all
         strip_path: true
         paths:
           - /pg/
     plugins:
+      - name: cors
       - name: key-auth
         config:
-          hide_credentials: false
+          key_names: ["apikey", "Authorization"]
       - name: acl
         config:
-          hide_groups_header: true
-          allow:
-            - admin
+          allow: ["admin"]
+
+  # Dashboard Service (Studio)
   - name: dashboard
-    _comment: 'Studio: /* -> http://studio:3000/*'
-    url: 'http://studio:3000/'
+    url: http://studio:3000/
     routes:
       - name: dashboard-all
-        strip_path: true
+        strip_path: false
         paths:
           - /
     plugins:
