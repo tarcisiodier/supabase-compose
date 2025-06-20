@@ -266,7 +266,7 @@ services:
     image: darthsim/imgproxy:v3.8.0
     restart: unless-stopped
     volumes:
-      - ./volumes/storage:/var/lib/storage:z
+      - storage_data:/var/lib/storage
     healthcheck:
       test: [ "CMD", "imgproxy", "health" ]
       timeout: 5s
