@@ -178,7 +178,7 @@ services:
     restart: unless-stopped
     # SEM PORTAS EXPOSTAS - acesso via Kong
     volumes:
-      - ./volumes/storage:/var/lib/storage:z
+      - storage_data:/var/lib/storage
     healthcheck:
       test: [
           "CMD",
@@ -409,3 +409,4 @@ services:
 
 volumes:
   db-config:
+  storage_data: 

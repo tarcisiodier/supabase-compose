@@ -1,4 +1,5 @@
 volumes/.DS_Store
 volumes/db/data
+volumes/storage
 .DS_Store
 .env
