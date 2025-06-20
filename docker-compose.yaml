@@ -294,7 +294,7 @@ services:
       LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
 
   db:
-    image: supabase/postgres:15.8.1.060
+    image: supabase/postgres:17.4.1.041
     restart: unless-stopped
     # ÚNICA PORTA DE DATABASE EXPOSTA
     ports:
